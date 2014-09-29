@@ -43,13 +43,8 @@ module MT
       end
     end
 
-    def entry_ids(host, cgi_path, id)
-      conn = Faraday.new(:url => host) do |faraday|
-        faraday.request  :url_encoded             # form-encode POST params
-        # faraday.response :logger                  # log requests to STDOUT
-        faraday.adapter  Faraday.default_adapter  # make requests with Net::HTTP
-      end
-      res = conn.get do |req|
+    def entry_ids(cgi_path, id)
+      res = @conn.get do |req|
         req.url "/#{cgi_path}/mt-data-api.cgi/v1/sites/#{id}/entries"
         req.params['limit'] = 1000
         req.options.timeout = 120
@@ -58,13 +53,8 @@ module MT
       data['items'].map{ |x| x['id'] }
     end
 
-    def page_ids(host, cgi_path, id)
-      conn = Faraday.new(:url => host) do |faraday|
-        faraday.request  :url_encoded             # form-encode POST params
-        # faraday.response :logger                  # log requests to STDOUT
-        faraday.adapter  Faraday.default_adapter  # make requests with Net::HTTP
-      end
-      res = conn.get do |req|
+    def page_ids(cgi_path, id)
+      res = @conn.get do |req|
         req.url "/#{cgi_path}/mt-data-api.cgi/v1/sites/#{id}/pages"
         req.params['limit'] = 1000
         req.options.timeout = 120
