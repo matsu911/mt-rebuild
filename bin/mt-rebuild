@@ -1,0 +1,170 @@
+#!/usr/bin/env ruby
+
+require 'mt/rebuild'
+require 'cri'
+require 'faraday'
+require 'json'
+require 'pp'
+
+command = Cri::Command.define do
+  name        'mt-rebuild'
+  usage       'mt-rebuild [options]'
+  aliases     :ds, :stuff
+  summary     'Command line tool for rebuilding MovableType pages on a remote server.'
+  description 'Command line tool for rebuilding MovableType pages on a remote server.'
+
+  flag   :h,  :help,  'show help for this command' do |value, cmd|
+    puts cmd.help
+    exit 0
+  end
+end
+
+rebuild_cmd = Cri::Command.define do
+  name        'rebuild'
+  usage       'rebuild [options]'
+  aliases     :ds, :stuff
+  summary     'Rebuild MovableType pages on a remote server.'
+  description 'Rebuild MovableType pages on a remote server.'
+
+  flag   :h,  :help,  'show help for this command' do |value, cmd|
+    puts cmd.help
+    exit 0
+  end
+  option nil, :host, 'host name', argument: :required
+  option nil, :token, 'access token', argument: :required
+  option nil, :cgi_path, 'CGI path', argument: :optional
+  option nil, :ids, 'IDs to rebuild', argument: :required
+
+  run do |opts, args, cmd|
+    host, token = opts.values_at(:host, :token)
+    cgi_path = opts[:cgi_path] || 'mt'
+    ids = opts[:ids].split(',')
+    while !ids.empty?
+      # access_token = MT::Rebuild::get_access_token(host, user, pass, cgi_path)
+      MT::Rebuild.new(host).rebuild_pages(token, cgi_path, ids.slice!(0, 10))
+    end
+  end
+end
+
+entries_cmd = Cri::Command.define do
+  name        'entries'
+  usage       'entries [options]'
+  aliases     :auth
+  summary     'retrieve entry ids.'
+  description 'retrieve entry ids.'
+
+  flag   :h,  :help,  'show help for this command' do |value, cmd|
+    puts cmd.help
+    exit 0
+  end
+  option nil, :host, 'host name', argument: :required
+  option nil, :id, 'blog id', argument: :required
+  option nil, :cgi_path, 'CGI path', argument: :optional
+
+  run do |opts, args, cmd|
+    host, id = opts.values_at(:host, :id)
+    cgi_path = opts[:cgi_path] || 'mt'
+    puts MT::Rebuild.new(host).entry_ids(cgi_path, id).join(',')
+  end
+end
+
+
+pages_cmd = Cri::Command.define do
+  name        'pages'
+  usage       'pages [options]'
+  aliases     :auth
+  summary     'retrieve page ids.'
+  description 'retrieve page ids.'
+
+  flag   :h,  :help,  'show help for this command' do |value, cmd|
+    puts cmd.help
+    exit 0
+  end
+  option nil, :host, 'host name', argument: :required
+  option nil, :id, 'blog id', argument: :required
+  option nil, :cgi_path, 'CGI path', argument: :optional
+
+  run do |opts, args, cmd|
+    host, id = opts.values_at(:host, :id)
+    cgi_path = opts[:cgi_path] || 'mt'
+    puts MT::Rebuild.new(host).page_ids(cgi_path, id).join(',')
+  end
+end
+
+blogs_cmd = Cri::Command.define do
+  name        'blogs'
+  usage       'blogs [options]'
+  aliases     :auth
+  summary     'retrieve blog ids.'
+  description 'retrieve blog ids.'
+
+  flag   :h,  :help,  'show help for this command' do |value, cmd|
+    puts cmd.help
+    exit 0
+  end
+  option nil, :host, 'host name', argument: :required
+  option nil, :id, 'user id', argument: :required
+  option nil, :cgi_path, 'CGI path', argument: :optional
+
+  run do |opts, args, cmd|
+    host, id = opts.values_at(:host, :id)
+    cgi_path = opts[:cgi_path] || 'mt'
+    puts MT::Rebuild.new(host).blog_ids(cgi_path, id).join(',')
+  end
+end
+
+apply_theme_cmd = Cri::Command.define do
+  name        'apply_theme'
+  usage       'apply_theme [options]'
+  aliases     :auth
+  summary     'apply theme.'
+  description 'apply theme.'
+
+  flag   :h,  :help,  'show help for this command' do |value, cmd|
+    puts cmd.help
+    exit 0
+  end
+  option nil, :host, 'host name', argument: :required
+  option nil, :id, 'user id', argument: :required
+  option nil, :cgi_path, 'CGI path', argument: :optional
+  option nil, :token, 'access token', argument: :required
+
+  run do |opts, args, cmd|
+    host, id, token = opts.values_at(:host, :id, :token)
+    cgi_path = opts[:cgi_path] || 'mt'
+    MT::Rebuild.new(host).apply_theme(token, cgi_path, id, args[0])
+  end
+end
+
+authorization_cmd = Cri::Command.define do
+  name        'authorization'
+  usage       'authorization [options]'
+  aliases     :auth
+  summary     'Authorize MovableType on a remote server.'
+  description 'Authorize MovableType on a remote server.'
+
+  flag   :h,  :help,  'show help for this command' do |value, cmd|
+    puts cmd.help
+    exit 0
+  end
+  option nil, :host, 'host name', argument: :required
+  option nil, :user, 'user name', argument: :required
+  option nil, :pass, 'user passowrd', argument: :required
+  option nil, :cgi_path, 'CGI path', argument: :optional
+
+  run do |opts, args, cmd|
+    host, user, pass = opts.values_at(:host, :user, :pass)
+    cgi_path = opts[:cgi_path] || 'mt'
+    access_token = MT::Rebuild.new(host).get_access_token(user, pass, cgi_path)
+    puts "accessToken: #{access_token}"
+  end
+end
+
+command.add_command(rebuild_cmd)
+command.add_command(authorization_cmd)
+command.add_command(entries_cmd)
+command.add_command(blogs_cmd)
+command.add_command(pages_cmd)
+command.add_command(apply_theme_cmd)
+
+command.run(ARGV)
