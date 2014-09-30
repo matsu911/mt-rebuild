@@ -39,7 +39,7 @@ module MT
       if res.headers['x-mt-next-phase-url']
         puts res.headers['x-mt-next-phase-url']
         sleep 5
-        rebuild_pages(token, host, cgi_path, ids, res.headers['x-mt-next-phase-url'])
+        rebuild_pages(token, cgi_path, ids, res.headers['x-mt-next-phase-url'])
       end
     end
 
