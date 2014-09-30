@@ -125,7 +125,7 @@ apply_theme_cmd = Cri::Command.define do
     exit 0
   end
   option nil, :host, 'host name', argument: :required
-  option nil, :id, 'user id', argument: :required
+  option nil, :id, 'site id', argument: :required
   option nil, :cgi_path, 'CGI path', argument: :optional
   option nil, :token, 'access token', argument: :required
 
